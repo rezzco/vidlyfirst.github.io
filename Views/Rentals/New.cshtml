@@ -1,0 +1,269 @@
+﻿
+@{
+    ViewBag.Title = "New Rental Form";
+}
+<style>
+    .moviediv {
+        padding: 4px;
+        margin: 2px;
+         display:inline-block;
+       
+    }
+</style>
+<h2>New Rental Form</h2>
+<form id="newRental">
+    <div class="form-group">
+        <label>Customer</label>
+        <input id="customer" name="customer" required data-rule-validCostumer="true" type="text" value="" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Movie</label>
+        <input id="movies" name="movies" emptymovielist="true" type="text" value="" class=" form-control" />
+    </div>
+    <div id="selectedMovies"class="col-sm-4">
+        
+        <p class="bg-muted">Selected movies : <span id="movieCount">0</span></p>
+    </div>
+    <div class="row">
+        <div class="col-sm-3">
+            <ul id="movieList" class="list-group "></ul>
+        </div>
+    </div>
+
+    <br />
+    <button class="btn btn-primary">Submit</button>
+
+</form>
+
+@section scripts
+{
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        
+
+        $(document)
+            .ready(function() {
+
+                var vm = {
+                    movieIds: []
+                };
+                var selectedIds = "";
+
+                $(document).on('click', '.moviediv', function (event) {
+                    var toRemove = $(this);
+                    $(this).remove();
+
+                    var count = $("#movieCount").html();
+                    temp = parseInt(count);
+                    $("#movieCount").text(temp -1);
+                    //remove from vm
+                    //vm.movieIds.r
+
+
+                });
+
+
+                var customers = new Bloodhound({
+                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+
+                    remote: {
+                        limit: 5,
+                        url: '/api/customers?text=%QUERY',
+                        wildcard: '%QUERY'
+                    }
+                });
+
+                $('#customer')
+                    .typeahead(null,
+                    {
+                        
+                        name: 'customers',
+                        display: 'name',
+                        source: customers
+                    })
+                    .on("typeahead:select",
+                        function(e, customer) {
+                            vm.customerId = customer.id;
+                            console.log(vm);
+                        });
+
+
+                var movies = new Bloodhound({
+                    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                    queryTokenizer: Bloodhound.tokenizers.whitespace,
+
+                    remote: {
+                        url: '/api/movies?text=%QUERY',
+                        wildcard: '%QUERY',
+                        limit:5
+                    }
+                });
+
+                $('#movies')
+                    .typeahead(null,
+                    {
+                        name: 'movies',
+                        display: 'name',
+                        source: movies
+                    })
+                    .on("typeahead:select",
+                        function (e, movie) {
+                            $('#selectedMovies').append("<div class='moviediv bg-info text-white rounded'>" + movie.name + "</div>");
+                            var count = $("#movieCount").html();
+                            var temp = 0;
+                            if (count !="" ) {
+                                temp = parseInt(count);
+                            }
+                            $("#movieCount").text(temp+1);
+                            //$("#movieList").append("<li class='list-group-item'>" + movie.name + "</li>");
+
+                            $('#movies').typeahead("val", "");
+                            vm.movieIds.push(movie.id);
+                            selectedIds = selectedIds + movie.id;
+                            console.log(selectedIds);
+                            //vm.movieNames.push(movie.name);
+                            console.log(vm);
+                        });
+
+                $.validator.addMethod("emptyMovieList",
+                    function() {
+                        return vm.movieIds.length > 0;
+                    },
+                    "Please select atleast 1 movie.");
+                $.validator.addMethod("validCostumer",
+                    function() {
+                        return vm.customerId && vm.customerId !== 0;
+                    },"Please select a valid customer.");
+                var validator =$("#newRental")
+                    .validate({
+                        submitHandler: function() {
+                            
+                            $.ajax({
+                                    url: "/api/NewRental",
+                                    method: "POST",
+                                    data: vm
+                                })
+                                .done(function() {
+
+                                    toastr.success("Rentals successfully recorded!");
+
+                                    $("#customer").typeahead("val", "");
+                                    $("#movies").typeahead("val", "");
+                                    $("#selectedMovies").empty();
+                                    $("#selectedMovies").append('<p class="bg-muted">Selected movies : <span id="movieCount">0</span></p>');
+
+                                    vm = { movieIds: [] };
+
+                                    validator.resetForm();
+                                })
+                                .fail(function() {
+                                    toastr.error("Something unexpected happend, No Rentals made!");
+                                });
+                            return false;
+                        }
+                    });
+
+
+                //$("#customer")
+                //    .autocomplete(
+                //    {
+                //        source: function(request, response) {
+                //            $.ajax(
+                //            {
+                //                url: "/api/customers",
+                //                dataType: "json",
+                //                type: 'get',
+                //                data:
+                //                {
+                //                    text: request.term
+                //                },
+                //                success: function(data) {
+                //                    response($.map(data,
+                //                        function(item) {
+                //                            return { lable: item.name, value: item.name, id: item.id };
+                //                        }));
+                //                }
+                //            });
+                //        },
+                //        minLength: 2,
+                //        select: function(event, customer) {
+                //            vm.customerId = customer.item.id;
+
+                //        }
+                //    });
+
+                //        $("#movies")
+                //            .autocomplete(
+                //            {
+                //                source: function(request, response) {
+                //                    $.ajax(
+                //                    {
+                //                        url: "/api/movies",
+                //                        dataType: "json",
+                //                        type: 'get',
+                //                        data:
+                //                        {
+                //                            text: request.term
+                //                        },
+                //                        success: function(data) {
+                //                            //console.log(data);
+                //                            response($.map(data,
+                //                                function(item) {
+                //                                    //console.log(item.id);
+
+                //                                    return { lable: item.name, value: item.name, id: item.id };
+                //                                }));
+                //                        }
+                //                    });
+                //                },
+                //                minLength: 2,
+                //                select: function(event, movie) {
+                //                $("#movieList")
+                //            .append("<li class='list-group-item'>" + movie.item.value + "</li>");
+                //        vm.movieIds.push(movie.item.id);
+                //        console.log(vm);
+                //    }
+                //});
+
+
+                //var vm = {
+                //                movieIds:[]
+                //            };
+
+                //var customerNameList = [];
+                //$.ajax({
+                //    url: "/api/customers",
+                //    datatype: 'json',
+                //    type: 'GET',
+                //    success: function(data) {
+                //        $.each(data,
+                //            function(key, index) {
+                //                console.log(index.name);
+                //                customerNameList.push(index.name);
+                //            });
+                //    }
+                //});
+
+                //$('#customer')
+                //    .autocomplete({
+                //        source: customerNameList,
+                //        select: function(e, customer) {
+                //            vm.customerId = customer.id;
+                //            console.log(customer);
+                //        }
+
+                //    })
+
+
+                //        var vm = {
+                //            movieIds:[]
+                //        };
+            });
+
+
+    </script>
+}
+
+
+

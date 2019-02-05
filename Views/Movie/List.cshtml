@@ -1,0 +1,107 @@
+﻿@using Vidly.Models
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Movie List</h2>
+
+<p>
+    @Html.ActionLink("Add Movie", "New","Movie",null, new {@class="btn btn-primary"})
+</p>
+<div>
+    <table id="movies" class="table table-striped align-center">
+        <thead>
+            <tr>
+                <th> Movie Name</th>
+                <th>Genre</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+
+    </table>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document)
+            .ready(function() {
+
+                var table = $('#movies')
+                    .DataTable({
+                        ajax: {
+                            url: "/api/movies",
+                            method: "GET",
+                            dataSrc: ""
+                        },
+                        columns: [
+                            {
+                                data: 'name'
+
+                            },
+                            {
+                                data: 'genre.name',
+                                render: function(data, type, movie) {
+                                    return data +
+                                        "<span class='badge alert-success'>" +
+                                        movie
+                                        .numberInStock +
+                                        "</span>";
+                                }
+
+                            },
+                            {
+                                data: "id",
+                                render: function(data) {
+                                    return "<div class='btn-group ' role='group'>" +
+                                        "<button type='button' class='btn btn-secondary btn-sm'><a href='/movie/edit/" +
+                                        data +
+                                        "'><i class='fa fa-edit'> Edit</i></a></button>" +
+                                        "<button data-movies-id='" +
+                                        data +
+                                        "' type='button' class='btn btn-danger btn-sm js-delete'><i class='fa fa-trash-o'> Delete</i></button>" +
+                                        "</div>";
+                                }
+                            }
+                        ]
+                    });
+
+                $('#movies')
+                    .on('click',
+                        '.js-delete',
+                        function() {
+                            var button = $(this);
+                            bootbox.confirm({
+                                title:"delete a movie",
+                                message: "are you sure?",
+                                buttons: {
+                                    cancel: {
+                                        lable: '<i class="fa fa-times"></i> YES'
+                                    },
+                                    confirm: {
+                                        lable: '<i class="fa fa-check"></i> NO'
+                                    }
+
+                                },
+                                callback: function (result) {
+                                    if (result) {
+                                    $.ajax({
+                                        url: "/api/movies/" + button.attr('data-movies-id'),
+                                        type: "DELETE",
+                                        success: function () {
+                                            
+                                            table.row(button.parents("tr")).remove().draw();
+                                        }
+                                        
+                                    });
+                                    }
+                                }
+                            });
+
+                        });
+                $("#movies_wrapper").removeClass("form-inline");
+            });
+    </script>
+}
+

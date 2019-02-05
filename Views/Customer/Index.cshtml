@@ -1,0 +1,112 @@
+﻿@model IEnumerable<Vidly.Models.Customer>
+@{
+    ViewBag.Title = "Index";
+}
+<style>
+    #addBtn {
+        margin: 10px;
+    }
+   
+   #Customers_wrapper {
+        position: relative;
+       float: left;
+       margin: 0;
+   }
+   #Customers_wrapper .row {
+       position: relative;
+       float: left;
+       margin: 0;
+
+    }
+</style>
+
+<h2 class="h1">Customer List</h2>
+<button id="addBtn"class="btn btn-primary" onclick="location.href='@Url.Action("New","Customer")'">Add New Customer</button>
+<br/>
+<div>
+    <table class="table table-striped" id="Customers">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>MemberShip Type</th>
+            <th>action</th>
+        </tr>
+        </thead>
+        
+    </table>
+</div>
+@section scripts
+{
+    <script>
+        $(document)
+            .ready(function () {
+                var table=$('#Customers').DataTable({
+                    ajax: {
+                        url: "/api/customers/",
+                        method:"GET",
+                        dataSrc:""
+                    },
+                    columns:[
+                        {
+                        data:"name"
+                        },
+                        {
+                            data:"membershipType.name"
+                        },
+                        {
+                            data:"id",
+                            render: function(data) {
+                                return "<div class='btn-group ' role='group'>" +
+                                    "<button type='button' class='btn btn-secondary btn-sm'><a href='/customer/edit/" +
+                                    data +
+                                    "'><i class='fa fa-edit'> Edit</i></a></button>" +
+                                    "<button data-customer-id='" +
+                                    data +
+                                    "' type='button' class='btn btn-danger btn-sm js-delete'><i class='fa fa-trash-o'> Delete</i></button>" +
+                                    "</div>";
+                            }
+                        }
+                    ]
+                });
+
+                $('#Customers')
+                    .on("click",
+                        ".js-delete",
+                        function() {
+                            var button = $(this);
+                            bootbox.confirm({
+                                title: "Delete a customer",
+                                message: "Are you sure?",
+                                buttons: {
+                                    cancel: {
+                                        label: '<i class="fa fa-times"></i> Not Really!'
+                                    },
+                                    confirm: {
+                                        label: '<i class="fa fa-check"></i> Positive'
+                                    }
+                                },
+                                callback: function (result) {
+                                    console.log('This was logged in the callback: ' + result);
+                                    if (result) {
+                                        var id = button.attr("data-customer-id");
+                                        $.ajax({
+                                            url: "/api/customers/" + id,
+                                            method: "DELETE",
+                                            success: function() {
+                                                table.row(button.parents("tr")).remove().draw();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                          
+                                
+
+
+                            
+                        });
+            });
+
+    </script>
+}
+

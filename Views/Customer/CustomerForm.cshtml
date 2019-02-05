@@ -1,0 +1,56 @@
+﻿@model Vidly.ViewModels.CustomerViewModel
+@{
+    ViewBag.Title = "CustomerForm";
+}
+
+<h2>@Model.Title</h2>
+
+@using (Html.BeginForm("Save", "Customer", new { @autocomplete = "off" }))
+{
+    @Html.ValidationSummary(true,"")
+    <div>
+        @Html.LabelFor(m => m.Customer.Name)
+        @Html.TextBoxFor(m => m.Customer.Name, new {@class="form-control"})
+        @Html.ValidationMessageFor(m=>m.Customer.Name)
+    </div>
+    <div>
+        @Html.LabelFor(m => m.Customer.BirthDate)
+        @Html.TextBoxFor(m => m.Customer.BirthDate, new 
+   { @Value="", @class = "form-control datepicker", @Id = "birthDate", @placeholder = "e.g. 1 jan 2019" })
+        @Html.ValidationMessageFor(m=>m.Customer.BirthDate)
+    </div>
+   
+    <div>
+        @Html.LabelFor(m => m.Customer.MembershipTypeId)
+        @Html.DropDownListFor(m => m.Customer.MembershipTypeId, new SelectList(@Model.MembershipTypes,"Id", "Name"),"", new {@class="form-control"})
+        @Html.ValidationMessageFor(m => m.Customer.MembershipTypeId)
+    </div>
+    <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="Subscribed" for="@Model.Customer.IsSubscribedtoNewsLetter">
+        <label class="form-check-label" for="Subscribed">Subscribe to NewsLetter</label>
+        @Html.ValidationMessageFor(m => m.Customer.IsSubscribedtoNewsLetter)
+    </div>
+    @Html.HiddenFor(m=>m.Customer.Id)
+    @Html.AntiForgeryToken()
+    <button class="btn btn-primary">Save</button>
+    
+}
+
+@section scripts
+{
+    
+<script type="text/javascript">
+    
+        $(function () {
+
+            $(".datepicker").datepicker();
+
+        });
+    
+
+    @*@Scripts.Render("~/bundles/jqueryval")*@
+</script>
+    
+    <!--<script src="~/Scripts/FormJavaScripts.js"></script>-->
+}
+

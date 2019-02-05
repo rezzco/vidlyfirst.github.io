@@ -1,0 +1,57 @@
+﻿@using Vidly.Models
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Movie List</h2>
+
+
+
+<div>
+    <table id="movies" class="table table-striped">
+        <thead>
+            <tr>
+                <th> Movie Name</th>
+                <th>Genre</th>
+            </tr>
+        </thead>
+
+    </table>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document)
+            .ready(function() {
+
+                var table = $('#movies')
+                    .DataTable({
+                        ajax: {
+                            url: "/api/movies",
+                            method: "GET",
+                            dataSrc: ""
+                        },
+                        columns: [
+                            {
+                                data: 'name'
+
+                            },
+                            {
+                                data: 'genre.name',
+                                render: function(data, type, movie) {
+                                    return data +
+                                        "<span class='badge alert-success'>" +
+                                        movie
+                                        .numberInStock +
+                                        "</span>";
+                                }
+
+                            }
+                        ]
+                    });
+            });
+    </script>
+}
+
